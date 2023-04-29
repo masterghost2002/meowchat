@@ -1,0 +1,25 @@
+{
+  "name": "meowchat-api",
+  "version": "1",
+  "description": "This api is for meowchat real time chatting app",
+  "main": "index.js",
+  "author": "Rakesh Dhariwal",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.3",
+    "node-mailer": "^0.1.1",
+    "nodemon": "^2.0.22",
+    "ws": "^8.13.0"
+  }
+}
