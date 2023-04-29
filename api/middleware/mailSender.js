@@ -9,12 +9,12 @@ let transporter = nodemailer.createTransport({
   },
 });
 const sendMail = (request, response) => {
-    const email = request.body.email;
+    const email = request.email?request.email:request.body.email;
     const name = request.name ? request.name : request.body.name;
-    const resetToken = request.resetToken;
+    const redirectLink = request.redirectLink;
     const field_data = {
         name:name,
-        resetToken:resetToken,
+        redirectLink,
         type: request.type,
     }
     let mailOptions = {
@@ -185,7 +185,7 @@ const sendMail = (request, response) => {
                     </tr>
                     <tr>
                       <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:18px;line-height:1;text-align:center;color:#000000;"><a style="text-decoration:none; color:#63b3ed " href=${`http://localhost:5173/resetpassword/verify/${field_data.resetToken}`}> ${field_data.type}</a></div>
+                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:18px;line-height:1;text-align:center;color:#000000;"><a style="text-decoration:none; color:#63b3ed " href=${field_data.redirectLink}> ${field_data.type}</a></div>
                       </td>
                     </tr>
                     <tr>

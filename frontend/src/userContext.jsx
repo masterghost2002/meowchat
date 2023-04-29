@@ -7,6 +7,7 @@ export function UserContextProvider({children}){
     const [fullname, setFullName] = useState("");
     const [avatar, setAvatar] = useState("");
     const [isFetching, setIsFetching] = useState(false);
+    const [email, setEmail] = useState(null);
     useEffect(()=>{
         const fetchUser = async ()=>{
             setIsFetching(true);
@@ -24,7 +25,7 @@ export function UserContextProvider({children}){
       fetchUser();
     },[]);
     return (
-        <UserContext.Provider value={{username, setUserName, id, setId, isFetching, avatar, setAvatar, fullname, setFullName}}>
+        <UserContext.Provider value={{username, setUserName, id, setId, isFetching, avatar, setAvatar, fullname, setFullName, email, setEmail}}>
             {children}
         </UserContext.Provider>
     )

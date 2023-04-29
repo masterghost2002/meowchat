@@ -5,6 +5,7 @@ import Chat from "./components/Chat/Chat";
 import ResetPassword from './pages/ResetPassword';
 import ResetPasswordVerify from "./pages/ResetPasswordVerify";
 import LogoSplash from "./components/LogoSplash";
+import Profile from "./pages/Profile";
 import {Route, Routes} from "react-router-dom";
 export default function PageRouter() {
     const { username } = useContext(UserContext);
@@ -17,6 +18,7 @@ export default function PageRouter() {
             <Route path="/" element={username?<Chat/>:<Auth/>}/>
             <Route path="/resetpassword" element={<ResetPassword/>}/>
             <Route path="/resetpassword/verify/:token" element={<ResetPasswordVerify/>}/>
+            <Route path="/profile" element={<Profile/>}/>
         </Routes>
     )
 }

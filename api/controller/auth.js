@@ -6,7 +6,6 @@ const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
 const VerifyToken = require('../models/VerifyToken');
 const { validateForm, errorModal, validateEmail } = require('../middleware/formValidate');
-const verifyToken = require("../models/VerifyToken");
 router.get('/profile', (req, res)=>{
     const token = req.cookies?.token;
     if(token){
@@ -67,7 +66,8 @@ router.post('/login', async (req, res) => {
                 id: user._id,
                 username:user.username,
                 avatar:user.avatar,
-                fullname:user.fullname
+                fullname:user.fullname,
+                email:user.email
             },
             process.env.TOKEN_SECRET,
             { expiresIn: "1w" }
@@ -98,7 +98,7 @@ router.post('/reset/password', async (req, res, next)=>{
         await token.save();
         req.email = email;
         req.name = user.fullname;
-        req.resetToken = resetToken;
+        req.redirectLink = 'https://meowchat.netlify.app/resetpassword/verify/'+resetToken;
         req.type = 'Reset Password';
         next();
     } catch (error) {
@@ -116,7 +116,44 @@ router.post('/reset/password/verify', async function (req, res){
         await User.findOneAndUpdate({email}, {password:await CryptoJS.AES.encrypt(password, process.env.CRYPTO_SECRET).toString()});
         return res.status(201).json("Done");
     } catch (error) {
-        return res.status(500).send(errorModal("server", "server", "Server error try again!"));;
+        return res.status(500).send(errorModal("server", "server", "Server error try again!"));
     }
 });
+
+// this route send verification link to new email
+router.post('/update/email', async function (req, res, next){
+    const token = req.cookies?.token;
+    const {newEmail} = req.body; 
+    if(!validateEmail(newEmail)) return res.status(400).json(errorModal("email", "Email", "Inavlid Email"));
+    let currUser = null;
+    if(token){
+        currUser = await jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
+            if(err) return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
+            return result;
+        })
+    };
+    try {
+        const user = await User.findOne({email:newEmail});
+        if(user) return res.status(400).json(errorModal("email", "Email", "Email is already registered"));
+        const resetToken = await crypto.randomBytes(32).toString('hex');
+        const token = new VerifyToken(
+            {
+                token:resetToken,
+                email: currUser.email,
+            }
+        );
+        await token.save();
+        req.email = currUser.email;
+        req.name = currUser.fullname;
+        req.type = 'Verify Email';
+        req.redirectLink = 'https://meowchat.netlify.app/verify/email/'+resetToken;
+        next();
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send(errorModal("server", "server", "Server error try again!"));
+    }
+    return res.status(200).json("Email updated")
+
+}, sendMail);
 module.exports = router;

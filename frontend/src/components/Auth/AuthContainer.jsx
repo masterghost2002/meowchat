@@ -16,7 +16,7 @@ export default function AuthContainer() {
     const { addToast } = CustomToast();
     const [credentials, setCredentials] = useState({ username_email: "", password: "" });
     const [isFetching, setIsFetching] = useState(false);
-    const { setUserName, setId, setAvatar, setFullName } = useContext(UserContext);
+    const { setUserName, setId, setAvatar, setFullName, setEmail } = useContext(UserContext);
     const [error, setError] = useState({});
     const handleFormData = (e) => {
         e.preventDefault();
@@ -44,6 +44,7 @@ export default function AuthContainer() {
             setId(res.data._id);
             setFullName(res.data.fullname);
             setAvatar(res.data.avatar);
+            setEmail(res.data.email);
         } catch (err) {
             setError(err.response.data.errorInfo);
             addToast({
