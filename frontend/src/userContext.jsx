@@ -17,6 +17,7 @@ export function UserContextProvider({children}){
                 setUserName(res.data.username);
                 setFullName(res.data.fullname);
                 setAvatar(res.data.avatar);
+                setEmail(res.data.email);
             } catch (error) {
                 console.log(error);
             }

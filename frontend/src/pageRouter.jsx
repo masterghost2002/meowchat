@@ -7,6 +7,7 @@ import ResetPasswordVerify from "./pages/ResetPasswordVerify";
 import LogoSplash from "./components/LogoSplash";
 import Profile from "./pages/Profile";
 import {Route, Routes} from "react-router-dom";
+import VerifyEmail from "./pages/VerifyEmail";
 export default function PageRouter() {
     const { username } = useContext(UserContext);
     const {isFetching} = useContext(UserContext);
@@ -19,6 +20,7 @@ export default function PageRouter() {
             <Route path="/resetpassword" element={<ResetPassword/>}/>
             <Route path="/resetpassword/verify/:token" element={<ResetPasswordVerify/>}/>
             <Route path="/profile" element={<Profile/>}/>
+            <Route path="/verfiy/email/:token" element={<VerifyEmail/>}/>
         </Routes>
     )
 }

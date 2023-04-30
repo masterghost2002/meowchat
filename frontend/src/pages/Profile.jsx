@@ -124,10 +124,10 @@ export default function Profile() {
             />
             <Text mt={5} fontWeight='600'>{fullname}</Text>
             <Text>{username}</Text>
-            <Text color={'gray.600'}>rakeshdhariwal61@gmail.com</Text>
+            <Text color={'gray.600'}>{email}</Text>
           </Container>
         </GridItem>
-        <GridItem p={[2, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={'100dvh'} overflow={'auto'}>
+        <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={'100dvh'} overflow={'auto'}>
           <NavBar />
           <UpdateAvatarContainer avatar={avatar} />
           <EmailContainer email={email} />
