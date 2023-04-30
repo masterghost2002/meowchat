@@ -1,8 +1,9 @@
 import React from 'react';
 import { Container, Avatar, AvatarBadge, Text, Divider } from '@chakra-ui/react';
 import 'animate.css';
+import { keys } from 'lodash';
 const UserInfo = ({ user, setSelectedUser, userId, isSelected }) => {
-  if (!user || !userId) return <></>
+  if (!userId) return <></>
   return (
     <>
       <Container
@@ -30,10 +31,8 @@ const UserInfo = ({ user, setSelectedUser, userId, isSelected }) => {
   )
 }
 export default function PeopleList({ selectedUser, onlinePeople, setSelectedUser, offlinePeople }) {
-  if (onlinePeople.length === 0) return;
   return (
     <Container px={4}  overflowX={'auto'} mt={2} maxH={'90%'} width={'auto'} >
-      {/* <Logo /> */}
       {Object.keys(onlinePeople).map((userId, index) => {
         return (
           <UserInfo
@@ -47,6 +46,7 @@ export default function PeopleList({ selectedUser, onlinePeople, setSelectedUser
       }
       )}
       {Object.keys(offlinePeople).map((userId, index) => {
+        if(!userId) return <></>
         return (
           <UserInfo
             key={userId}

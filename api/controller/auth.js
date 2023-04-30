@@ -6,6 +6,7 @@ const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
 const VerifyToken = require('../models/VerifyToken');
 const { validateForm, errorModal, validateEmail } = require('../middleware/formValidate');
+// verify the cookie token
 router.get('/profile', (req, res)=>{
     const token = req.cookies?.token;
     if(token){
@@ -16,7 +17,9 @@ router.get('/profile', (req, res)=>{
     }
     else
     return res.status(422).json("Token not found");
-})
+});
+
+// to register a new user
 router.post('/register', validateForm, async (req, res) => {
     const userByUsername = await User.findOne({ username: req.body.username });
     const userByEmail = await User.findOne({ email: req.body.email });
@@ -42,6 +45,7 @@ router.post('/register', validateForm, async (req, res) => {
     }
 });
 
+// for login
 router.post('/login', async (req, res) => {
     if (!req.body.username_email || !req.body.password)
         return res.status(500).json(errorModal("authentication", "incomplete_info", "Please Provide all details"));
@@ -82,6 +86,59 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// update user 
+router.post('/update/user', async (req, res)=>{
+    const token = req.cookies?.token;
+    let user;
+    if(token){
+        user = jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
+            if(err) return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
+            return result;
+        })
+    }
+    const {password, username, fullname} = req.body;
+    let fieldToUpdate = {};
+    if(password){
+        if(password.trim().length < 8)
+            return res.status(400).json(errorModal("invalid", "password", "Password must be at least 8 character long"));
+        fieldToUpdate.password = await CryptoJS.AES.encrypt(password, process.env.CRYPTO_SECRET).toString();
+    };
+    if(username){
+        if(username.trim().length < 4)
+            return res.status(400).json(errorModal("invalid", "username", "Username must be at least 4 character long"));
+        
+        fieldToUpdate.username = username.trim();
+    };
+    if(fullname){
+        if(fullname.trim().length<4) return res.status(400).json(errorModal("invalid", "Fullname", "Fullname must be at least 4 character long"));
+        fieldToUpdate.fullname = fullname.trim();
+    }
+    if(Object.keys(fieldToUpdate).length === 0) return res.status(400).json(errorModal("invalid", "Field", "Nothing to update, fields are empty"));
+    try {
+        const updatedUser = await User.findOneAndUpdate({email:user.email}, {
+            $set: fieldToUpdate
+        }, {new:true});
+        const accessToken = await jwt.sign(
+            {
+                id: user._id,
+                username:user.username,
+                avatar:user.avatar,
+                fullname:user.fullname,
+                email:user.email
+            },
+            process.env.TOKEN_SECRET,
+            { expiresIn: "1w" }
+        );
+        const loginDetails = {...(updatedUser._doc)};
+        loginDetails.password = undefined;
+        return res.cookie('token', accessToken, {sameSite:'none', secure:true}).status(201).json(loginDetails);
+    } catch (error) {
+        return res.status(500).json(errorModal("server", "server", "server error"));
+    }
+    
+});
+
+// password reset flow first send the password reset link then verify it
 router.post('/reset/password', async (req, res, next)=>{
     const {email} = req.body;
     if(!validateEmail(email)) return res.status(401).json(errorModal("Validation", "Email", "Not a valid email address"));
@@ -110,7 +167,7 @@ router.post('/reset/password/verify', async function (req, res){
     const {token, password} = req.body;
     if(password.length<8) return res.status(500).send(errorModal("password", "password", "At least 8 character long."));
     try {
-        const userInfo = await VerifyToken.findOne({token:token});
+        const userInfo = await VerifyToken.findOneAndDelete({token:token});
         if(!userInfo) return res.status(500).send(errorModal("Token", "Token", "Token expired"));
         const email = userInfo._doc.email;
         await User.findOneAndUpdate({email}, {password:await CryptoJS.AES.encrypt(password, process.env.CRYPTO_SECRET).toString()});
@@ -140,10 +197,11 @@ router.post('/update/email', async function (req, res, next){
             {
                 token:resetToken,
                 email: currUser.email,
+                newEmail:newEmail
             }
         );
         await token.save();
-        req.email = currUser.email;
+        req.email = newEmail;
         req.name = currUser.fullname;
         req.type = 'Verify Email';
         req.redirectLink = 'https://meowchat.netlify.app/verify/email/'+resetToken;
@@ -156,4 +214,21 @@ router.post('/update/email', async function (req, res, next){
     return res.status(200).json("Email updated")
 
 }, sendMail);
+
+// for verifiying the new email
+router.post('/email/verify', async (req, res)=>{
+    const {token} = req.body;
+    if(!token) return res.status(500).send(errorModal("token", "Token", "Invalid Token"));
+    try {
+        const userInfo = await VerifyToken.findOneAndDelete({token:token});
+        if(!userInfo) return res.status(500).send(errorModal("Token", "Token", "Token expired"));
+        const email = userInfo._doc.email;
+        const newEmail = userInfo._doc.newEmail;
+        console.log(newEmail);
+        await User.findOneAndUpdate({email}, {email:newEmail});
+        return res.status(201).json("Done");
+    } catch (error) {
+        return res.status(500).send(errorModal("server", "server", "Server error try again!"));
+    }
+});
 module.exports = router;

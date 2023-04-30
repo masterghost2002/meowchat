@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 const tokenModel = new Schema({
     token: String,
     email: String, 
+    newEmail:{type:String, default:null},
     createdAt: Date
 });
 tokenModel.path('createdAt').index({expires:600});

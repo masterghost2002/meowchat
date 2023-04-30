@@ -205,7 +205,7 @@ export default function Chat() {
                     </Container>
                     <Divider />
                     <PeopleList
-                        onlinePeople={onlinePeople}
+                        onlinePeople={Object.keys(onlinePeople).length > 0 && onlinePeople}
                         offlinePeople={offlinePeople}
                         setSelectedUser={setSelectedUser}
                         selectedUser={selectedUser}

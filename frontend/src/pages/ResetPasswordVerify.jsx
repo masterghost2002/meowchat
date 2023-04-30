@@ -26,7 +26,6 @@ export default function ResetPasswordVerify() {
   }
     try {
       await publicRequest.post('/auth/reset/password/verify', {password, token});
-      console.log("hello");
       return navigate('/');
     } catch (err) {
       addToast({

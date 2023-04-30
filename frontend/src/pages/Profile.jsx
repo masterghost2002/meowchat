@@ -103,7 +103,51 @@ const UpdateAvatarContainer = ({ avatar }) => {
   )
 }
 export default function Profile() {
-  const { avatar, fullname, username, email } = useContext(UserContext);
+  const { avatar, fullname, username, email,setUserName, setId, setAvatar, setFullName, setEmail } = useContext(UserContext);
+  const [usernameAvailable, setUsernameAvailable] = useState(false);
+  const [newUsername, setNewUsername] = useState(null);
+  const [newPassword, setNewPassword] = useState(null);
+  const [newFullname, setNewFullname] = useState(null);
+  const { addToast } = CustomToast();
+  // show is realtime availablity of username
+  const checkUserName = async (username) => {
+    try {
+      const res = await userRequest.post('/find/username', { username });
+      if (res.status === 200) setUsernameAvailable(true);
+    } catch (error) {
+      setUsernameAvailable(false);
+    }
+  };
+  const handleOnChangeUsername = (e) => {
+    setNewUsername(e.target.value);
+    if (newUsername?.trim().length > 3)
+      checkUserName(e.target.value);
+  };
+
+  // update user
+  const handleOnSubmit = async (e) => {
+    // The preventDefault method prevents the browser from issuing the default action which in the case of a form submission is to refresh the page.
+    e.preventDefault();
+    try {
+      const res = await userRequest.post('/auth/update/user', { password: newPassword, username: newUsername, fullname: newFullname });
+      addToast({
+        title: 'Update',
+        message: 'Your profile is updated.',
+        status: 'success'
+      });
+      setUserName(res.data.username);
+      setId(res.data._id);
+      setFullName(res.data.fullname);
+      setAvatar(res.data.avatar);
+      setEmail(res.data.email);
+    } catch (err) {
+      addToast({
+        title: err.response.data.errorInfo.errorType,
+        message: err.response.data.errorInfo.errorMessage,
+        status: 'error'
+    });
+    }
+  }
   return (
     <Container p={0} minW={'100%'}>
       <SimpleGrid
@@ -127,15 +171,16 @@ export default function Profile() {
             <Text color={'gray.600'}>{email}</Text>
           </Container>
         </GridItem>
-        <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={'100dvh'} overflow={'auto'}>
+        <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={['100%', '100dvh']} overflow={'auto'}>
           <NavBar />
           <UpdateAvatarContainer avatar={avatar} />
           <EmailContainer email={email} />
-          <FormContainer>
-            <SimpleInput size='lg' label={'Full Name'} placeholder={fullname} />
-            <SimpleInput size='lg' label={'Username'} placeholder={username} />
-            <PasswordInput />
-            <Button width={'30%'} colorScheme='blue' alignSelf={'flex-end'}>Update</Button>
+          <FormContainer handleSubmit={handleOnSubmit}>
+            <SimpleInput size='lg' label={'Full Name'} placeholder={fullname} onChange={e => setNewFullname(e.target.value)} />
+            <SimpleInput size='lg' label={'Username'} placeholder={username} onChange={handleOnChangeUsername} />
+            {newUsername?.trim().length > 3 && <Text my={2} color={usernameAvailable ? 'green.400' : 'red.400'}>{usernameAvailable ? 'Username is available' : 'Username is not available'}</Text>}
+            <PasswordInput onChange={e => setNewPassword(e.target.value)} />
+            <Button width={'30%'} colorScheme='blue' alignSelf={'flex-end'} type='submit'>Update</Button>
           </FormContainer>
         </GridItem>
       </SimpleGrid>

@@ -6,6 +6,7 @@ const app = express();
 const auth = require('./controller/auth');
 const message = require('./controller/messages');
 const peoples = require('./controller/findPeoples');
+const username = require('./controller/findUsername');
 const {wss }= require('./controller/wsServer');
 const cors = require('cors');
 app.use(cors({
@@ -18,5 +19,6 @@ app.use(express.urlencoded({extended:true}));
 app.use('/api/auth', auth);
 app.use('/api/people', peoples);
 app.use('/api/',message);
+app.use('/api', username)
 const server = app.listen(process.env.PORT, ()=>{console.log('listening to '+process.env.PORT)});
 wss(server);

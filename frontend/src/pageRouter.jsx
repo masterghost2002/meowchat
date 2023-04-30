@@ -20,7 +20,7 @@ export default function PageRouter() {
             <Route path="/resetpassword" element={<ResetPassword/>}/>
             <Route path="/resetpassword/verify/:token" element={<ResetPasswordVerify/>}/>
             <Route path="/profile" element={<Profile/>}/>
-            <Route path="/verfiy/email/:token" element={<VerifyEmail/>}/>
+            <Route path="/verify/email/:token" element={<VerifyEmail/>}/>
         </Routes>
     )
 }
