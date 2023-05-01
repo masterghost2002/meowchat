@@ -11,7 +11,7 @@ import { userRequest } from '../../apiRequestMethods';
 import Menu from '../Menu';
 import {delete_cookie} from 'sfcookies';
 const wssurl = 'wss://meowchat-backend-production.up.railway.app';
-// const wssurl = 'ws://localhost:5000'
+// const wssurl = 'ws://localhost:5000';
 export default function Chat() {
     // this ref is to scroll to bottom in chat
     const divUnderMessages = useRef();
@@ -76,9 +76,10 @@ export default function Chat() {
         const people = {};
         // for uniqueness
         peopleArray.forEach(({ userId, username, avatar }) => {
-            if (loggedUserId !== userId)
+            if (loggedUserId !== userId && userId !== undefined){
                 people[userId] = { username, avatar, isOnline: true };
-        })
+            }
+        });
         setOnlinePeople(people);
     }
 

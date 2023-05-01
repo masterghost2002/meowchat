@@ -18,6 +18,11 @@ const UserSchema = new mongoose.Schema({
     avatar:{
         type:String
     },
+    avatar_id:{
+        type:String,
+        unique:true,
+        default:null
+    },
     password:{
         type:String,
         required:true,

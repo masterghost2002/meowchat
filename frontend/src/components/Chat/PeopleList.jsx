@@ -1,7 +1,6 @@
 import React from 'react';
 import { Container, Avatar, AvatarBadge, Text, Divider } from '@chakra-ui/react';
 import 'animate.css';
-import { keys } from 'lodash';
 const UserInfo = ({ user, setSelectedUser, userId, isSelected }) => {
   if (!userId) return <></>
   return (

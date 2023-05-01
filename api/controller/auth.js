@@ -6,12 +6,26 @@ const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
 const VerifyToken = require('../models/VerifyToken');
 const { validateForm, errorModal, validateEmail } = require('../middleware/formValidate');
+const {uploadImage}  = require("../middleware/cloudinaryUpload");
+
+// decrypt token
+const checkToken = async (req, res, next)=>{
+    const token = req.cookies?.token;
+    if(token){
+        await jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
+            if(err) return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
+            req.user = result;
+            next();
+        });
+    }
+    else return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
+}
 // verify the cookie token
 router.get('/profile', (req, res)=>{
     const token = req.cookies?.token;
     if(token){
         jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
-            if(err) throw err;
+            if(err) res.cookie('token', null, {sameSite:'none', secure:true}).status(401);
             return res.status(201).json(result);
         })
     }
@@ -64,14 +78,14 @@ router.post('/login', async (req, res) => {
 
         const isAutenticated = await user.validatePassword(credentials.password)
         if(!isAutenticated) return res.status(401).json(errorModal("authentication", "password", "Incorrect password"));
-
         const accessToken = await jwt.sign(
             {
                 id: user._id,
                 username:user.username,
                 avatar:user.avatar,
                 fullname:user.fullname,
-                email:user.email
+                email:user.email,
+                avatar_id:user.avatar_id
             },
             process.env.TOKEN_SECRET,
             { expiresIn: "1w" }
@@ -87,16 +101,9 @@ router.post('/login', async (req, res) => {
 });
 
 // update user 
-router.post('/update/user', async (req, res)=>{
-    const token = req.cookies?.token;
-    let user;
-    if(token){
-        user = jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
-            if(err) return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
-            return result;
-        })
-    }
-    const {password, username, fullname} = req.body;
+router.post('/update/user',checkToken,uploadImage, async (req, res)=>{
+    const user = req.user;
+    const {password, username, fullname, avatar, avatar_id} = req.body;
     let fieldToUpdate = {};
     if(password){
         if(password.trim().length < 8)
@@ -112,19 +119,26 @@ router.post('/update/user', async (req, res)=>{
     if(fullname){
         if(fullname.trim().length<4) return res.status(400).json(errorModal("invalid", "Fullname", "Fullname must be at least 4 character long"));
         fieldToUpdate.fullname = fullname.trim();
-    }
+    };
+    if(avatar){ 
+        fieldToUpdate.avatar_id = avatar_id;
+        fieldToUpdate.avatar = avatar
+    };
+
     if(Object.keys(fieldToUpdate).length === 0) return res.status(400).json(errorModal("invalid", "Field", "Nothing to update, fields are empty"));
     try {
         const updatedUser = await User.findOneAndUpdate({email:user.email}, {
             $set: fieldToUpdate
         }, {new:true});
+        // console.log(updatedUser);
         const accessToken = await jwt.sign(
             {
-                id: user._id,
-                username:user.username,
-                avatar:user.avatar,
-                fullname:user.fullname,
-                email:user.email
+                id: updatedUser._id,
+                username:updatedUser.username,
+                avatar:updatedUser.avatar,
+                avatar_id:updatedUser.avatar_id,
+                fullname:updatedUser.fullname,
+                email:updatedUser.email
             },
             process.env.TOKEN_SECRET,
             { expiresIn: "1w" }

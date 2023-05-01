@@ -49,7 +49,7 @@ const wss =  (server) => {
         const userDataFromDb = await User.findById(id).select('avatar');
         connection.userId = id;
         connection.username = username;
-        connection.avatar = userDataFromDb.avatar;
+        connection.avatar = userDataFromDb?.avatar;
 
 
         // sending message

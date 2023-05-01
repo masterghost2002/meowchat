@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Container, SimpleGrid, GridItem, Avatar, Text, Box, Link as ChakraLink, Input, InputGroup, InputRightElement, IconButton, Button } from '@chakra-ui/react';
+import { Container, SimpleGrid, GridItem, Avatar, Text, Box, Link as ChakraLink, Input, InputGroup, InputRightElement, IconButton, Button, Spinner } from '@chakra-ui/react';
 import { userRequest } from '../apiRequestMethods';
 import { UserContext } from '../userContext';
 import { BiArrowBack } from 'react-icons/bi';
@@ -82,10 +82,11 @@ const EmailContainer = ({ email }) => {
     </Box>
   )
 }
-const UpdateAvatarContainer = ({ avatar }) => {
+const UpdateAvatarContainer = ({ avatar, setNewAvatar }) => {
   const [imagePreview, setImagePreview] = useState(avatar);
   const handleFile = (e) => {
     setImagePreview(URL.createObjectURL(e.target.files[0]));
+    setNewAvatar(e.target.files[0]);
   }
   const triggerFileUpload = () => {
     const inputDiv = document.getElementById('fileupload');
@@ -108,6 +109,8 @@ export default function Profile() {
   const [newUsername, setNewUsername] = useState(null);
   const [newPassword, setNewPassword] = useState(null);
   const [newFullname, setNewFullname] = useState(null);
+  const [newAvatar, setNewAvatar] = useState(null);
+  const [spinner, setSpinner] = useState(false);
   const { addToast } = CustomToast();
   // show is realtime availablity of username
   const checkUserName = async (username) => {
@@ -128,8 +131,14 @@ export default function Profile() {
   const handleOnSubmit = async (e) => {
     // The preventDefault method prevents the browser from issuing the default action which in the case of a form submission is to refresh the page.
     e.preventDefault();
+    let newDetails = new FormData();
+    if(newUsername) newDetails.append('username', newUsername);
+    if(newPassword) newDetails.append('password', newPassword);
+    if(newFullname) newDetails.append('fullname', newFullname);
+    if(newAvatar) newDetails.append('avatar', newAvatar);
+    setSpinner(true);
     try {
-      const res = await userRequest.post('/auth/update/user', { password: newPassword, username: newUsername, fullname: newFullname });
+      const res = await userRequest.post('/auth/update/user', newDetails);
       addToast({
         title: 'Update',
         message: 'Your profile is updated.',
@@ -140,7 +149,9 @@ export default function Profile() {
       setFullName(res.data.fullname);
       setAvatar(res.data.avatar);
       setEmail(res.data.email);
+      setSpinner(false);
     } catch (err) {
+      setSpinner(false);
       addToast({
         title: err.response.data.errorInfo.errorType,
         message: err.response.data.errorInfo.errorMessage,
@@ -163,7 +174,7 @@ export default function Profile() {
             fontFamily={`Poppins, sans-serif`}
           >
             <Avatar
-              size='3xl'
+              size='2xl'
               src={avatar}
             />
             <Text mt={5} fontWeight='600'>{fullname}</Text>
@@ -173,14 +184,18 @@ export default function Profile() {
         </GridItem>
         <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={['100%', '100dvh']} overflow={'auto'}>
           <NavBar />
-          <UpdateAvatarContainer avatar={avatar} />
+          <UpdateAvatarContainer avatar={avatar} setNewAvatar={setNewAvatar}/>
           <EmailContainer email={email} />
           <FormContainer handleSubmit={handleOnSubmit}>
             <SimpleInput size='lg' label={'Full Name'} placeholder={fullname} onChange={e => setNewFullname(e.target.value)} />
             <SimpleInput size='lg' label={'Username'} placeholder={username} onChange={handleOnChangeUsername} />
             {newUsername?.trim().length > 3 && <Text my={2} color={usernameAvailable ? 'green.400' : 'red.400'}>{usernameAvailable ? 'Username is available' : 'Username is not available'}</Text>}
             <PasswordInput onChange={e => setNewPassword(e.target.value)} />
-            <Button width={'30%'} colorScheme='blue' alignSelf={'flex-end'} type='submit'>Update</Button>
+            <Button width={'30%'} isDisabled={spinner} colorScheme='blue' alignSelf={'flex-end'} type='submit'>
+              {
+                spinner?<Spinner/>:'Update'
+              }
+            </Button>
           </FormContainer>
         </GridItem>
       </SimpleGrid>

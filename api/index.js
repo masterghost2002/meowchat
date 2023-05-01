@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 require('./database/db');
 const app = express();
+const fileUpload = require('express-fileupload');
 const auth = require('./controller/auth');
 const message = require('./controller/messages');
 const peoples = require('./controller/findPeoples');
@@ -16,6 +17,10 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/'
+}));
 app.use('/api/auth', auth);
 app.use('/api/people', peoples);
 app.use('/api/',message);
