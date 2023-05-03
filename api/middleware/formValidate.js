@@ -23,7 +23,7 @@ const validateForm = async (req, res, next) => {
     if (!req.body.email || !validateEmail(req.body.email)) {
         return res.status(401).json(errorModal("authentication", "email", "Invalid email"));
     }
-    if (!req.body.username || req.body.username.trim(" ").length === 0) {
+    if (!req.body.username || req.body.username.trim(" ").length === 0 || req.body.username.indexOf('@')!=-1) {
         return res.status(401).json(errorModal("authentication", "username", "Username is required"));
     }
     if (!req.body.password || req.body.password.trim(" ").length < 8) {

@@ -40,7 +40,7 @@ const CustomInput = ({ handleChange, disabled, placeholder, handleClick, buttonI
     </InputGroup>
   )
 }
-const EmailContainer = ({ email }) => {
+const EmailContainer = ({ email, setEmail }) => {
   const { addToast } = CustomToast();
   const [newEmailInput, setNewEmailInput] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -54,6 +54,7 @@ const EmailContainer = ({ email }) => {
         message: 'Previous mail and new mail must not be same',
         status: 'error'
       });
+      setEmail(newEmail);
       return;
     }
     try {
@@ -185,7 +186,7 @@ export default function Profile() {
         <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={['100%', '100dvh']} overflow={'auto'}>
           <NavBar />
           <UpdateAvatarContainer avatar={avatar} setNewAvatar={setNewAvatar}/>
-          <EmailContainer email={email} />
+          <EmailContainer email={email} setEmail = {setEmail} />
           <FormContainer handleSubmit={handleOnSubmit}>
             <SimpleInput size='lg' label={'Full Name'} placeholder={fullname} onChange={e => setNewFullname(e.target.value)} />
             <SimpleInput size='lg' label={'Username'} placeholder={username} onChange={handleOnChangeUsername} />

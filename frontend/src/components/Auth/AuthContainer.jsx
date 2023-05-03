@@ -17,6 +17,7 @@ export default function AuthContainer() {
     const [credentials, setCredentials] = useState({ username_email: "", password: "" });
     const [isFetching, setIsFetching] = useState(false);
     const { setUserName, setId, setAvatar, setFullName, setEmail } = useContext(UserContext);
+    const [otp, setOTP] = useState("");
     const [error, setError] = useState({});
     const handleFormData = (e) => {
         e.preventDefault();
@@ -78,7 +79,7 @@ export default function AuthContainer() {
                 </Box>
                 <Logo />
                 <VStack spacing={4} width='full'>
-                    <AuthForm handleFormData={handleFormData} handleRequest={handleRequest} error={error} isFetching={isFetching} />
+                    <AuthForm handleFormData={handleFormData} handleRequest={handleRequest} error={error} isFetching={isFetching} otp={otp} setOTP={setOTP} credential={credentials}/>
                 </VStack>
             </Box>
         </Container>

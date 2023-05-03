@@ -4,36 +4,31 @@ const jwt = require('jsonwebtoken');
 const sendMail = require('../middleware/mailSender');
 const CryptoJS = require('crypto-js');
 const crypto = require('crypto');
-const VerifyToken = require('../models/VerifyToken');
+const Token = require('../models/Token');
 const { validateForm, errorModal, validateEmail } = require('../middleware/formValidate');
 const {uploadImage}  = require("../middleware/cloudinaryUpload");
+const {verifyToken, build_token} = require('../middleware/tokenizer');
 
-// decrypt token
-const checkToken = async (req, res, next)=>{
-    const token = req.cookies?.token;
-    if(token){
-        await jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
-            if(err) return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
-            req.user = result;
-            next();
-        });
+/*
+    //* This router will verify the token which comes in cookies from user
+*/
+router.get('/profile',verifyToken, async (req, res)=>{
+    const _id = req.user.id;
+    try {
+        const user = await User.findById(_id);
+        const accessToken = await build_token(user._doc);
+        const loginDetails = {...(user._doc)};
+        loginDetails.password = undefined;
+        return res.cookie('token', accessToken, {sameSite:'none', secure:true}).status(201).json(loginDetails);
+    } catch (error) {
+        return res.cookie('token', null, {sameSite:'none', secure:true}).status(500);
     }
-    else return res.status(401).json(errorModal("authentication", "Authentication", "Your are not authorized"));
-}
-// verify the cookie token
-router.get('/profile', (req, res)=>{
-    const token = req.cookies?.token;
-    if(token){
-        jwt.verify(token, process.env.TOKEN_SECRET, {}, (err, result)=>{
-            if(err) res.cookie('token', null, {sameSite:'none', secure:true}).status(401);
-            return res.status(201).json(result);
-        })
-    }
-    else
-    return res.status(422).json("Token not found");
 });
 
-// to register a new user
+/*
+    //* First validateForm verify all the coming details like email username password etc
+    //* This router will verify the token which comes in cookies from user
+*/
 router.post('/register', validateForm, async (req, res) => {
     const userByUsername = await User.findOne({ username: req.body.username });
     const userByEmail = await User.findOne({ email: req.body.email });
@@ -47,19 +42,21 @@ router.post('/register', validateForm, async (req, res) => {
             username: req.body.username,
             password: req.body.password,
             email: req.body.email,
-            avatar: req.body.image ? req.body.image : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ71GPRz3ThTOyK4PSj2Z4z0PFcgHfzZeIL0NXxs68dbA&s',
+            avatar: req.body.avatar ? req.body.avatar : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ71GPRz3ThTOyK4PSj2Z4z0PFcgHfzZeIL0NXxs68dbA&s',
         }
     );
     try {
         await user.save();
         return res.status(200).json('User Created');
     } catch (error) {
-        console.log(error);
-        return res.status(500).json('Error')
+        return res.status(500).json(errorModal("Server", "Server Error", "Try again."));
     }
 });
 
-// for login
+/*
+    //*? POST: LOGIN ROUTE /api/auth/login
+    //* If the user is valid send the token in cookies
+*/
 router.post('/login', async (req, res) => {
     if (!req.body.username_email || !req.body.password)
         return res.status(500).json(errorModal("authentication", "incomplete_info", "Please Provide all details"));
@@ -74,37 +71,28 @@ router.post('/login', async (req, res) => {
             user = await User.findOne({email:credentials.username_email});
         else user = await User.findOne({username:credentials.username_email});
         if (!user) return res.status(401).json(errorModal("authentication", "username_email", "User not found"));
-
-
         const isAutenticated = await user.validatePassword(credentials.password)
         if(!isAutenticated) return res.status(401).json(errorModal("authentication", "password", "Incorrect password"));
-        const accessToken = await jwt.sign(
-            {
-                id: user._id,
-                username:user.username,
-                avatar:user.avatar,
-                fullname:user.fullname,
-                email:user.email,
-                avatar_id:user.avatar_id
-            },
-            process.env.TOKEN_SECRET,
-            { expiresIn: "1w" }
-        );
+        const accessToken = await build_token(user._doc);
         const loginDetails = {...(user._doc)};
         loginDetails.password = undefined;
         return res.cookie('token', accessToken, {sameSite:'none', secure:true}).status(201).json(loginDetails);
     }
     catch(error){
-        console.log(error);
         res.status(500).send(errorModal("server", "server", "Server error try again!"));
     }
 });
 
-// update user 
-router.post('/update/user',checkToken,uploadImage, async (req, res)=>{
+/*
+    //*? POST: LOGIN ROUTE /api/auth/update/user
+    //*? Middlewares: verifyToken->uploadImage(if user send the avatar to be upadted)
+*/ 
+router.post('/update/user',verifyToken,uploadImage, async (req, res)=>{
     const user = req.user;
     const {password, username, fullname, avatar, avatar_id} = req.body;
     let fieldToUpdate = {};
+
+    // ! validation of fields provided by user so, that the empty field not get upadted
     if(password){
         if(password.trim().length < 8)
             return res.status(400).json(errorModal("invalid", "password", "Password must be at least 8 character long"));
@@ -125,28 +113,18 @@ router.post('/update/user',checkToken,uploadImage, async (req, res)=>{
         fieldToUpdate.avatar = avatar
     };
 
+    //? If nothing is passed by user in fields 
     if(Object.keys(fieldToUpdate).length === 0) return res.status(400).json(errorModal("invalid", "Field", "Nothing to update, fields are empty"));
     try {
         const updatedUser = await User.findOneAndUpdate({email:user.email}, {
             $set: fieldToUpdate
         }, {new:true});
-        // console.log(updatedUser);
-        const accessToken = await jwt.sign(
-            {
-                id: updatedUser._id,
-                username:updatedUser.username,
-                avatar:updatedUser.avatar,
-                avatar_id:updatedUser.avatar_id,
-                fullname:updatedUser.fullname,
-                email:updatedUser.email
-            },
-            process.env.TOKEN_SECRET,
-            { expiresIn: "1w" }
-        );
+        const accessToken = await build_token(updatedUser._doc);
         const loginDetails = {...(updatedUser._doc)};
         loginDetails.password = undefined;
         return res.cookie('token', accessToken, {sameSite:'none', secure:true}).status(201).json(loginDetails);
     } catch (error) {
+        console.log(error);
         return res.status(500).json(errorModal("server", "server", "server error"));
     }
     
@@ -160,7 +138,7 @@ router.post('/reset/password', async (req, res, next)=>{
         const user  = await User.findOne({email:email});
         if(!user) return res.status(401).json(errorModal("authentication", "username_email", "User not found"));
         const resetToken = await crypto.randomBytes(32).toString('hex');
-        const token = new VerifyToken(
+        const token = new Token(
             {
                 token:resetToken,
                 email: req.body.email,
@@ -181,17 +159,20 @@ router.post('/reset/password/verify', async function (req, res){
     const {token, password} = req.body;
     if(password.length<8) return res.status(500).send(errorModal("password", "password", "At least 8 character long."));
     try {
-        const userInfo = await VerifyToken.findOneAndDelete({token:token});
+        const userInfo = await Token.findOneAndDelete({token:token});
         if(!userInfo) return res.status(500).send(errorModal("Token", "Token", "Token expired"));
         const email = userInfo._doc.email;
         await User.findOneAndUpdate({email}, {password:await CryptoJS.AES.encrypt(password, process.env.CRYPTO_SECRET).toString()});
-        return res.status(201).json("Done");
+        return res.status(201).send(errorModal("Update", "Password", "Password is updated"));
     } catch (error) {
         return res.status(500).send(errorModal("server", "server", "Server error try again!"));
     }
 });
 
-// this route send verification link to new email
+/*
+    //*? POST: LOGIN ROUTE /api/update/email
+    //* this route send the verification token to the user for email verification
+*/
 router.post('/update/email', async function (req, res, next){
     const token = req.cookies?.token;
     const {newEmail} = req.body; 
@@ -207,7 +188,7 @@ router.post('/update/email', async function (req, res, next){
         const user = await User.findOne({email:newEmail});
         if(user) return res.status(400).json(errorModal("email", "Email", "Email is already registered"));
         const resetToken = await crypto.randomBytes(32).toString('hex');
-        const token = new VerifyToken(
+        const token = new Token(
             {
                 token:resetToken,
                 email: currUser.email,
@@ -234,13 +215,12 @@ router.post('/email/verify', async (req, res)=>{
     const {token} = req.body;
     if(!token) return res.status(500).send(errorModal("token", "Token", "Invalid Token"));
     try {
-        const userInfo = await VerifyToken.findOneAndDelete({token:token});
+        const userInfo = await Token.findOneAndDelete({token:token});
         if(!userInfo) return res.status(500).send(errorModal("Token", "Token", "Token expired"));
         const email = userInfo._doc.email;
         const newEmail = userInfo._doc.newEmail;
-        console.log(newEmail);
         await User.findOneAndUpdate({email}, {email:newEmail});
-        return res.status(201).json("Done");
+        return res.status(200).json("Done");
     } catch (error) {
         return res.status(500).send(errorModal("server", "server", "Server error try again!"));
     }

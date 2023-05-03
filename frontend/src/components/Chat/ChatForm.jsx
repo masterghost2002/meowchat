@@ -7,9 +7,7 @@ import { TiAttachment } from 'react-icons/ti';
 
 export default function ChatForm({ setNewMessage, newMessage,sendMessage, sendFile }) {
   const [showEmoji, setShowEmoji] = useState(false);
-  const handleAttachFile = ()=>{
-    document.getElementById('getFile').click();
-  }
+  const handleAttachFile = ()=>document.getElementById('getFile').click();
   return (
     <>
     <Container maxWidth={'100%'} p={5} position={'relative'} bottom={0}>
@@ -24,9 +22,10 @@ export default function ChatForm({ setNewMessage, newMessage,sendMessage, sendFi
             placeholder='Type your message here'
             size={'lg'}
             value={newMessage}
-            onChange={e => setNewMessage(e.target.value)}
+            onChange={e => {setNewMessage(e.target.value)}}
             borderRadius={'inherit'}
             border={'none'}
+
           />
           </Container>
           <IconButton
@@ -40,7 +39,7 @@ export default function ChatForm({ setNewMessage, newMessage,sendMessage, sendFi
             icon={<TiAttachment size={'28px'}/>}
           >
           </IconButton>
-          <Input type='file' id="getFile" style={{display:'none'}} onChange={(e)=>sendFile(e)}/>
+          <Input type='file' id="getFile" style={{display:'none'}} onChange={(e)=>sendFile(e)} accept="image/*, application/pdf"/>
           <IconButton
             variant='solid'
             colorScheme='blue'

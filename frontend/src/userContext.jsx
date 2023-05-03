@@ -13,7 +13,7 @@ export function UserContextProvider({children}){
             setIsFetching(true);
             try {
                 const res = await publicRequest.get('/auth/profile');
-                setId(res.data.id);
+                setId(res.data._id);
                 setUserName(res.data.username);
                 setFullName(res.data.fullname);
                 setAvatar(res.data.avatar);

@@ -28,34 +28,35 @@ const VerifiedContainer = () => {
 }
 export default function VerifyEmail() {
     const [spinner, setSpinner] = useState(true);
-    const [showVerified, setShowVerified] = useState(false);
+    const [showVerified, setShowVerified] = useState(true);
     const param = useParams();
     const token = param?.token;
-    useEffect(()=>{
-        const requestVerify = async ()=>{
+    useEffect(() => {
+        const requestVerify = async () => {
             try {
-                const res = await publicRequest.post('/auth/email/verify', {token});
-                if(res.status === 201)
-                    setShowVerified(true);
+                await publicRequest.post('/auth/email/verify', { token });
+                setShowVerified(true);
                 setSpinner(false);
             } catch (error) {
                 setShowVerified(false);
+                setSpinner(false);
             }
         };
         requestVerify();
     }, []);
-    if (spinner) {
-        return (
-            <Container minW={'100%'} minH={'100dvh'} display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'column'}>
-                <Spinner size='xl' />
-                <Text textAlign={'center'} my={'10'}>Please wait while we are verifying.</Text>
-            </Container>
-        )
-    }
     return (
         <Container p={0} minW={'100%'} minH={'100dvh'} display={'flex'} justifyContent={'center'} alignItems={'center'} >
-            {showVerified?<VerifiedContainer />:
-            <ExpiredContainer />}
+            {
+                spinner ?
+                    <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'}>
+                        <Spinner size='xl' />
+                        <Text textAlign={'center'} my={'10'}>Please wait while we are verifying.</Text>
+                    </Box> :
+
+                    showVerified ?
+                        <VerifiedContainer /> :
+                        <ExpiredContainer />
+            }
         </Container>
     )
 }

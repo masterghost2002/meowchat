@@ -2,6 +2,19 @@ const ws = require('ws');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Message = require('../models/Message');
+const { format } = require('crypto-js');
+const cloudinary = require('cloudinary').v2 ;
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return '0 Bytes'
+
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
 const wss =  (server) => {
     const wsserver = new ws.WebSocketServer({ server });
     wsserver.on('connection',async (connection, req) => {
@@ -55,16 +68,31 @@ const wss =  (server) => {
         // sending message
         connection.on('message', async (message)=>{
             const messageData = JSON.parse(message.toString());
-            const {recipient, text} = messageData;
-            if(recipient && text){
+            const {recipient, text, file} = messageData;
+            let fileInfo = {};
+            if(file){
+                try{
+                    const res = await cloudinary.uploader.upload(file.data, {
+                        folder: 'meowchat_asset'
+                    });
+                    // console.log(res);
+                    fileInfo.url = res.secure_url;
+                    fileInfo.name = file.info;
+                    fileInfo.format = res.resource_type+'/'+res.format;
+                    fileInfo.size = formatBytes(res.bytes);
+                }catch(error){
+                    console.log(error);
+                }
+            }
+            if(recipient && (text || file)){
                 const messageDoc = await Message.create(
                     {
                         sender:connection.userId,
                         recipient,
                         text,
+                        file:Object.keys(fileInfo).length!=0?fileInfo:null
                     }
                 );
-                
                 // find will find only one
                 // but what if user is logged in laptop as well as mobile?
                 // so use filter,we can only send text thats why we are stringify it
@@ -73,6 +101,7 @@ const wss =  (server) => {
                     .filter(c=>c.userId === recipient)
                     .forEach(c=>c.send(JSON.stringify({
                         text,
+                        file:Object.keys(fileInfo).length!=0?fileInfo:null,
                         _id:messageDoc._id,
                         sender:connection.userId,
                         recipient,
