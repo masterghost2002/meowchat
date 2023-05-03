@@ -10,7 +10,7 @@ export default function ChatForm({ setNewMessage, newMessage,sendMessage, sendFi
   const handleAttachFile = ()=>document.getElementById('getFile').click();
   return (
     <>
-    <Container maxWidth={'100%'} p={5} position={'relative'} bottom={0}>
+    <Container maxWidth={'100%'} p={5} alignSelf={'flex-end'}>
       {showEmoji && <EmojiPicker width={'100%'} onEmojiClick={(e)=>setNewMessage(prev=>prev+" "+e.emoji)}/>}
       <FormContainer handleSubmit = {sendMessage}>
         <HStack>

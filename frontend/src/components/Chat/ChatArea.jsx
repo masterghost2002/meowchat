@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Container, Text, IconButton, VStack, Avatar, HStack, Box, Link, Image, Progress  } from '@chakra-ui/react';
+import { Container, Text, IconButton, VStack, Avatar, HStack, Box, Link, Image, Progress } from '@chakra-ui/react';
 import ChatForm from './ChatForm';
 import { IoIosArrowBack } from 'react-icons/io';
 import { AiOutlineArrowLeft, AiOutlineFilePdf } from 'react-icons/ai';
 const isImage = format => {
-    let allowedExtension = ['image/jpeg', 'image/jpg', 'image/png','image/gif','image/bmp'];
+    let allowedExtension = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp'];
     return allowedExtension.indexOf(format) != -1;
 }
 const HeaderLabel = ({ headerRef, userInfo, isMobile, setSelectedUser, lastSeen }) => {
@@ -17,7 +17,7 @@ const HeaderLabel = ({ headerRef, userInfo, isMobile, setSelectedUser, lastSeen 
                     aria-label='back'
                     bg='transparent'
                     icon={<IoIosArrowBack size={30}
-                    onClick={() => setSelectedUser(null)} />}
+                        onClick={() => setSelectedUser(null)} />}
                 />
                 <Avatar size='md' src={userInfo.avatar} mx={5} />
                 <VStack spacing={0} padding={0} align='stretch'>
@@ -30,16 +30,41 @@ const HeaderLabel = ({ headerRef, userInfo, isMobile, setSelectedUser, lastSeen 
 }
 const FileContainer = ({ file, isMe }) => {
     return (
-        <Link href={file.url} isExternal={true} display={'flex'} mb={2} style={{ textDecoration: 'none' }} flexDirection={'column'} width={'100%'} >
-            {isImage(file.format) && <Image src={file.url} height={['200px','300px']} width={'100%'} objectFit='cover' />}
-            <Box display={'flex'} alignItems={'center'}  bg={isMe?'blue.500':'blackAlpha.100'} p={2} borderRadius={6}>
+        <Link href={file.url} isExternal={true} display={'flex'} flexWrap={'wrap'} mb={2} style={{ textDecoration: 'none' }} flexDirection={'column'} width={'100%'} >
+            {isImage(file.format) && <Image src={file.url} height={['200px', '300px']} width={'100%'} objectFit='cover' />}
+            <Box bg={isMe?'blue.500':'blackAlpha.100'} p={2} borderRadius={6} width={'100%'} display={'flex'} alignItems={'center'}>
                 {!isImage(file.format) && <AiOutlineFilePdf size={20} />}
-                <Box width={'100%'}>
-                    <Text >{file.name}</Text>
+                <Box ml={2}>
+                    <Text>{file.name}</Text>
                     <Text fontSize={'10px'}>{file.size && file.size}</Text>
                 </Box>
             </Box>
         </Link>
+    )
+};
+const MessageBox = ({isMe}) => {
+    return (
+        <Box
+            key={index}
+            alignSelf={message.sender === loggedUserId ? 'flex-end' : 'flex-start'}
+            backgroundColor={message.sender === loggedUserId ? 'blue.400' : 'white'}
+            margin={2}
+            padding={3}
+            flexWrap={'wrap'}
+            maxWidth={'80%'}
+            height={'auto'}
+            display={'flex'}
+            flexDirection={'column'}
+            color={message.sender === loggedUserId ? 'white' : 'blue.400'}
+            borderRadius={message.file ? 10 : 22}
+            justifyContent={'space-between'}
+            fontFamily={`'Poppins', sans-serif`}
+            fontWeight={500}
+        >
+            {message.file && <FileContainer file={message.file} isMe={message.sender === loggedUserId} />}
+            <Text fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '18px' : '22px'}>{message.text}</Text>
+            <Text marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
+        </Box>
     )
 }
 export default function ChatArea(
@@ -58,10 +83,10 @@ export default function ChatArea(
         sendFile,
         selectedUser,
         isFetchingMessages
-        
+
     }) {
 
-    
+
     const messageContainer = useRef();
     const chatAreaRef = useRef();
     const headerRef = useRef();
@@ -100,7 +125,7 @@ export default function ChatArea(
 
     }
     const lastSeen = user && user.lastSeen ? handleDateInfo(user.lastSeen) : 'Offline';
-    
+
 
     // to scroll the message box on bottom on first  mount
     useEffect(() => {
@@ -142,7 +167,7 @@ export default function ChatArea(
                 onScroll={handleScrollToSetScrollButton}
             >
                 <HeaderLabel headerRef={headerRef} userInfo={user} isMobile={isMobile} setSelectedUser={setSelectedUser} lastSeen={lastSeen} />
-                {!isFetchingMessages&&
+                {!isFetchingMessages &&
                     <Container
                         display={'flex'}
                         flexDirection={'column'}
@@ -155,7 +180,8 @@ export default function ChatArea(
                             messages.map((message, index) => {
                                 const dateToDisplay = handleDateInfo(message.createdAt);
                                 return (
-                                    (message.sender === loggedUserId || message.sender === selectedUser) && <Box
+                                    (message.sender === loggedUserId || message.sender === selectedUser) &&
+                                    <Box
                                         key={index}
                                         alignSelf={message.sender === loggedUserId ? 'flex-end' : 'flex-start'}
                                         backgroundColor={message.sender === loggedUserId ? 'blue.400' : 'white'}
@@ -165,15 +191,17 @@ export default function ChatArea(
                                         maxWidth={'80%'}
                                         height={'auto'}
                                         display={'flex'}
+                                        flexDirection={'column'}
                                         color={message.sender === loggedUserId ? 'white' : 'blue.400'}
                                         borderRadius={message.file ? 10 : 22}
                                         justifyContent={'space-between'}
                                         fontFamily={`'Poppins', sans-serif`}
                                         fontWeight={500}
                                     >
-                                        {message.file && <FileContainer file={message.file} isMe = {message.sender === loggedUserId} />}
-                                        <Text fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '18px' : '22px'}>{message.text}</Text>
+                                        {message.file && <FileContainer file={message.file} isMe={message.sender === loggedUserId} />}
+                                        <Text noOfLines={100} fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '14px' : '18px'}>{message.text}</Text>
                                         <Text marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
+                
                                     </Box>
 
                                 )
