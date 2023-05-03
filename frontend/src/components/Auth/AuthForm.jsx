@@ -116,13 +116,13 @@ export default function AuthForm({ handleRequest, handleFormData, error, isFetch
             addToast({
                 title:"OTP send",
                 message:"Check your inbox for otp",
-                statuc:'success'
+                status:'success'
             })
         } catch (error) {
             addToast({
                 title:"Server error",
                 message:"try again",
-                statuc:'error'
+                status:'error'
             })
             setShowOtp(false);
         }
@@ -130,7 +130,7 @@ export default function AuthForm({ handleRequest, handleFormData, error, isFetch
     }
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if(!showOtp)
+        if(!showOtp && !isLogin)
             sendOtp();
         else handleRequest(isLogin);
     }
