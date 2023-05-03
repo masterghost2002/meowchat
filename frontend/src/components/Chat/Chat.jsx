@@ -254,10 +254,10 @@ export default function Chat() {
                 templateAreas={`"nav main"`}
                 gridTemplateRows={'50px 1fr 30px'}
                 gridTemplateColumns={isMobile ? (selectedUser === null ? '1fr 0fr' : '0fr 1fr') : '600px 1fr'}
-                gap='1'
                 minHeight={isMobile ? '100dvh' : '100vh'}
                 color='blackAlpha.700'
                 fontWeight='bold'
+                p={0}
             >
                 <GridItem
                     area={'nav'}
@@ -291,10 +291,11 @@ export default function Chat() {
                     maxH={'100dvh'}
                     // backgroundImage={'https://www.filepicker.io/api/file/u5frNNlBQDQbBX0nh9Mg'}
                     backgroundImage='https://i.pinimg.com/564x/94/8b/3d/948b3de8462265d7e76117557c533ffa.jpg'
+                    // bg={'pink.400'}
                     backgroundAttachment={'fixed'}
                     maxWidth={'100%'}
                     position={'relative'}
-
+                
                 >
                     <ChatArea
                         isMobile={isMobile}

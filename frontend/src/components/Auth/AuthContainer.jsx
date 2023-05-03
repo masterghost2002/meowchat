@@ -29,16 +29,18 @@ export default function AuthContainer() {
         })
     };
     const handleRequest = async (isLogin) => {
-        const requestUrl = isLogin ? '/auth/login' : '/auth/register';
+        const requestUrl = isLogin ? '/auth/login' : '/auth/register/verify';
+        if(!isLogin) credentials.Otp = otp;
         setIsFetching(true);
         try {
             const res = await publicRequest.post(requestUrl, credentials);
             if (!isLogin) {
                 addToast({
                     title: 'Account Created',
-                    message: 'Redirecting',
+                    message: 'You can now login',
                     status: 'success'
                 });
+                setIsFetching(false);
                 return;
             }
             setUserName(res.data.username);
@@ -79,7 +81,7 @@ export default function AuthContainer() {
                 </Box>
                 <Logo />
                 <VStack spacing={4} width='full'>
-                    <AuthForm handleFormData={handleFormData} handleRequest={handleRequest} error={error} isFetching={isFetching} otp={otp} setOTP={setOTP} credential={credentials}/>
+                    <AuthForm setIsFetching={setIsFetching} handleFormData={handleFormData} handleRequest={handleRequest}  error={error} isFetching={isFetching} otp={otp} setOTP={setOTP} credentials={credentials}/>
                 </VStack>
             </Box>
         </Container>

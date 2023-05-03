@@ -14,7 +14,7 @@ const sendMail = (request, response) => {
     const redirectLink = request.redirectLink;
     const field_data = {
         name:name,
-        redirectLink,
+        data: request.type === 'OTP verification'?request.OTP:`<a style="text-decoration:none; color:#63b3ed " href=${redirectLink}> ${request.type}</a>`,
         type: request.type,
     }
     let mailOptions = {
@@ -180,12 +180,12 @@ const sendMail = (request, response) => {
                     </tr>
                     <tr>
                       <td align="center" style="font-size:0px;padding:10px 25px;padding-right:25px;padding-left:25px;word-break:break-word;">
-                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:16px;line-height:1;text-align:center;color:#000000;">Please use the link below to ${field_data.type}:</div>
+                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:16px;line-height:1;text-align:center;color:#000000;"> ${field_data.type}:</div>
                       </td>
                     </tr>
                     <tr>
                       <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:18px;line-height:1;text-align:center;color:#000000;"><a style="text-decoration:none; color:#63b3ed " href=${field_data.redirectLink}> ${field_data.type}</a></div>
+                        <div style="font-family:open Sans Helvetica, Arial, sans-serif;font-size:18px;line-height:1;text-align:center;color:#000000;">${field_data.data}</div>
                       </td>
                     </tr>
                     <tr>

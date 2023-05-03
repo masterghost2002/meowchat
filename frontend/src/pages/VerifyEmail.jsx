@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Image, Text, HStack, Spinner } from '@chakra-ui/react';
-import { useParams } from 'react-router-dom';
+import { Box, Container, Image, Text, HStack, Spinner, Button } from '@chakra-ui/react';
+import { createSearchParams, useParams } from 'react-router-dom';
 import { GoVerified } from 'react-icons/go';
 import { MdError } from 'react-icons/md';
 import { publicRequest } from '../apiRequestMethods';
-const ExpiredContainer = () => {
-    return (
-        <Box display={'flex'} flexDirection={'column'} alignItems={'center'}>
-            <MdError size={'150px'} color='red' />
-            <Text textAlign={'center'} fontSize={'2xl'} fontWeight={'500'} color={'gray.600'}>Email verification failed </Text>
-            <Text textAlign={'center'} fontSize={'2xl'} fontWeight={'500'} color={'gray.600'}>Token expired </Text>
-        </Box>
-    )
-}
+import PasswordInput from '../components/Form/PasswordInput';
+import {CustomToast} from '../components/Toast';
 const VerifiedContainer = () => {
     return (
         <Box height={'100%'} p={0}>
@@ -27,36 +20,33 @@ const VerifiedContainer = () => {
     )
 }
 export default function VerifyEmail() {
-    const [spinner, setSpinner] = useState(true);
-    const [showVerified, setShowVerified] = useState(true);
+    const [spinner, setSpinner] = useState(false);
+    const [showVerified, setShowVerified] = useState(false);
+    const [password, setPassword] = useState("");
+    const {addToast} = CustomToast();
     const param = useParams();
     const token = param?.token;
-    useEffect(() => {
-        const requestVerify = async () => {
-            try {
-                await publicRequest.post('/auth/email/verify', { token });
-                setShowVerified(true);
-                setSpinner(false);
-            } catch (error) {
-                setShowVerified(false);
-                setSpinner(false);
-            }
-        };
-        requestVerify();
-    }, []);
+    const handleSubmit = async ()=>{
+        setSpinner(true);
+        try {
+            await publicRequest.post('/auth/email/verify', {token, password});
+            setShowVerified(true);
+        } catch (error) {
+            const data = error.response.data;
+            addToast({
+                title:data.errorInfo.errorFor,
+                message:data.errorInfo.errorMessage,
+                status:'error'
+            })
+        }
+        setSpinner(false);
+    };
     return (
-        <Container p={0} minW={'100%'} minH={'100dvh'} display={'flex'} justifyContent={'center'} alignItems={'center'} >
-            {
-                spinner ?
-                    <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'}>
-                        <Spinner size='xl' />
-                        <Text textAlign={'center'} my={'10'}>Please wait while we are verifying.</Text>
-                    </Box> :
-
-                    showVerified ?
-                        <VerifiedContainer /> :
-                        <ExpiredContainer />
-            }
+        <Container p={5} minW={'100%'} minH={'100dvh'} display={'flex'} justifyContent={'center'} alignItems={'center'} >
+            {showVerified?<VerifiedContainer/>:<Box width={['100%', 'auto']}>
+                <PasswordInput label={'Enter your password to confirm.'} onChange={(e)=>setPassword(e.target.value)}/>
+                <Button onClick={handleSubmit} colorScheme='blue' isDisabled={spinner}>{spinner?<Spinner/>:"Verify"}</Button>
+            </Box>}
         </Container>
     )
 }

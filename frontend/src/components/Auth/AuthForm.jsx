@@ -14,6 +14,7 @@ import PasswordInput from '../Form/PasswordInput';
 import { publicRequest } from '../../apiRequestMethods';
 import { Link } from 'react-router-dom';
 import OTPInput from '../Form/OTPInput';
+import { CustomToast } from '../Toast';
 const LoginForm = ({ handleFormData, error }) => {
     return (
         <>
@@ -39,7 +40,7 @@ const LoginForm = ({ handleFormData, error }) => {
     )
 
 }
-const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, otp, setOTP }) => {
+const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, otp, setOTP, showOtp }) => {
     const [showAvailablity, setShowAvailablity] = useState(false);
     const checkUserName = async (username) => {
         try {
@@ -96,18 +97,42 @@ const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, o
                 size='lg'
                 onChange={handleFormData}
             />
-            <OTPInput onChange={handleFormData} setOTP = {setOTP}/>
+            {showOtp && <OTPInput onChange={handleFormData} setOTP = {setOTP}/>}
         </>
     )
 
 }
-export default function AuthForm({ handleRequest, handleFormData, error, isFetching, otp, setOTP }) {
+export default function AuthForm({ handleRequest, handleFormData, error, isFetching,setIsFetching, otp, setOTP, credentials }) {
     // isLogin ==> true means login page, flase means signup page
+    const {addToast} = CustomToast();
     const [isLogin, setIsLogin] = useState(true);
     const [usernameAvailable, setUsernameAvailable] = useState(false);
-    const handleSubmit = (e) => {
+    const [showOtp, setShowOtp] = useState(false);
+    const sendOtp = async ()=>{
+        setIsFetching(true);
+        try {
+            const res = await publicRequest.post('/auth/register/sendotp', {email:credentials.email, fullname:credentials.fullname});
+            setShowOtp(true);
+            addToast({
+                title:"OTP send",
+                message:"Check your inbox for otp",
+                statuc:'success'
+            })
+        } catch (error) {
+            addToast({
+                title:"Server error",
+                message:"try again",
+                statuc:'error'
+            })
+            setShowOtp(false);
+        }
+        setIsFetching(false);
+    }
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        handleRequest(isLogin);
+        if(!showOtp)
+            sendOtp();
+        else handleRequest(isLogin);
     }
     return (
         <>
@@ -121,7 +146,7 @@ export default function AuthForm({ handleRequest, handleFormData, error, isFetch
                 {
                     isLogin ?
                         <LoginForm handleFormData={handleFormData} error={error} /> :
-                        <SignUpForm handleFormData={handleFormData} error={error}  otp={otp} setOTP={setOTP} setUsernameAvailable={setUsernameAvailable} usernameAvailable={usernameAvailable} />
+                        <SignUpForm  showOtp= {showOtp} handleFormData={handleFormData} error={error}  otp={otp} setOTP={setOTP} setUsernameAvailable={setUsernameAvailable} usernameAvailable={usernameAvailable} />
                 }
                 <ChakraLink color='blue.400' my={4} as={Link} to='/resetpassword' alignSelf={'flex-end'}>Forgotten Password?</ChakraLink>
                 <VStack>
@@ -138,7 +163,7 @@ export default function AuthForm({ handleRequest, handleFormData, error, isFetch
                                 aria-label="submit_btn"
                                 isDisabled={!isLogin && !usernameAvailable}
                             >
-                                {isLogin ? 'Login' : 'Sign Up'}
+                                {isLogin ? 'Login' : showOtp?'Sign Up':'Send OTP'}
                             </Button>
                     }
                 </VStack>
