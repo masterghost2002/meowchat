@@ -62,8 +62,8 @@ const MessageBox = ({isMe}) => {
             fontWeight={500}
         >
             {message.file && <FileContainer file={message.file} isMe={message.sender === loggedUserId} />}
-            <Text fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '18px' : '22px'}>{message.text}</Text>
-            <Text marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
+            <Text  wordBreak={'break-all'} fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '18px' : '22px'}>{message.text}</Text>
+            <Text  wordBreak={'break-all'} marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
         </Box>
     )
 }
@@ -199,8 +199,8 @@ export default function ChatArea(
                                         fontWeight={500}
                                     >
                                         {message.file && <FileContainer file={message.file} isMe={message.sender === loggedUserId} />}
-                                        <Text noOfLines={100} fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '14px' : '18px'}>{message.text}</Text>
-                                        <Text marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
+                                        <Text wordBreak={'break-all'} fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '14px' : '18px'}>{message.text}</Text>
+                                        <Text  wordBreak={'break-all'} marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
                 
                                     </Box>
 
