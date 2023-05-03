@@ -12,7 +12,7 @@ import Menu from '../Menu';
 import { delete_cookie } from 'sfcookies';
 const wssurl = 'wss://meowchat-backend-production.up.railway.app';
 // const wssurl = 'ws://localhost:5000';
-const allowedExtension = ['image/jpeg', 'image/jpg', 'image/png','image/gif','image/bmp', 'application/pdf'];
+const allowedExtension = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'application/pdf'];
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes'
 
@@ -38,7 +38,6 @@ export default function Chat() {
     const [messages, setMessages] = useState([]);
     const [scrollButton, setScrollButton] = useState(false);
     const [offlinePeople, setOfflinePeople] = useState({});
-    const [isSendingFile, setIsSendingFile] = useState(false);
     const [isFetchingMessages, setIsFetchingMessages] = useState(false);
     const { id: loggedUserId, setId, setUserName } = useContext(UserContext);
 
@@ -47,7 +46,7 @@ export default function Chat() {
     function connectToWs() {
         const ws = new WebSocket(wssurl);
         setWs(ws);
-        ws.addEventListener('message', handleMessage);
+        ws.addEventListener('message', handleMessageAndOnline);
         // for auto reconnect
         ws.addEventListener('close', () => {
             addToast({
@@ -61,6 +60,26 @@ export default function Chat() {
         });
     };
 
+    // set the messages coming from wss of online people
+    function handleMessageAndOnline(e) {
+        const messageData = JSON.parse(e.data);
+        if ('online' in messageData)
+            showOnlinePeople(messageData.online);
+        else if ('text' in messageData) {
+
+            setMessages(prev =>
+            (
+                uniqBy(
+                    [...prev,
+                    { ...messageData, isOur: false }
+                    ],
+                    '_id'
+                )
+            )
+            );
+        }
+
+    }
     // handle logOut 
     function handleLogout() {
         setWs(null);
@@ -76,24 +95,6 @@ export default function Chat() {
             div.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
-    // set the messages coming from wss of online people
-    function handleMessage(e) {
-        const messageData = JSON.parse(e.data);
-        if ('online' in messageData)
-            showOnlinePeople(messageData.online);
-        else if ('text' in messageData && messageData.sender === selectedUser) {
-            setMessages(prev =>
-            (
-                uniqBy(
-                    [...prev,
-                    { ...messageData, isOur: false }
-                    ],
-                    '_id'
-                )
-            )
-            );
-        }
-    }
 
     // fetch the dimension of the window (for mobile view or desktop)
     function getCurrentDimension() {
@@ -136,7 +137,7 @@ export default function Chat() {
         setMessages(prev => ([...prev, {
             text: newMessage,
             isOur: true,
-            file:fileDetails,
+            file: fileDetails,
             sender: loggedUserId,
             recipient: selectedUser,
             _id: Date.now(),
@@ -155,7 +156,7 @@ export default function Chat() {
     //function sendFile to send files
     function sendFile(e) {
         const file = e.target.files[0];
-        if(allowedExtension.indexOf(file.type) === -1){
+        if (allowedExtension.indexOf(file.type) === -1) {
             addToast({
                 title: "File not supported",
                 message: "Only images and pdf are allowed",
@@ -172,11 +173,11 @@ export default function Chat() {
             sendMessage(null, {
                 info: file.name,
                 data: reader.result
-            },{
-                fileName:file.name,
-                size:formatBytes(file.size),
-                url:URL.createObjectURL(file),
-                format:file.type
+            }, {
+                name: file.name,
+                size: formatBytes(file.size),
+                url: URL.createObjectURL(file),
+                format: file.type
             });
         };
     }
@@ -211,6 +212,7 @@ export default function Chat() {
             setIsMobile(true);
         connectToWs();
     }, []);
+
     useEffect(() => {
         const updateDimension = () => {
             const width = getCurrentDimension().width;
@@ -228,6 +230,7 @@ export default function Chat() {
     // fetch messages between the users from db
     useEffect(() => {
         const messagesData = async () => {
+            setMessages([]);
             if (!selectedUser) return;
             setIsFetchingMessages(true);
             let res;
@@ -236,7 +239,11 @@ export default function Chat() {
                 const { data } = res;
                 setMessages(data);
             } catch (error) {
-                console.log(error);
+                addToast({
+                    title:"Server Error",
+                    message:"Unable to fetch the messages",
+                    type:'error'
+                })
             }
             setIsFetchingMessages(false);
         }
@@ -303,9 +310,8 @@ export default function Chat() {
                         setScrollButton={setScrollButton}
                         loggedUserId={loggedUserId}
                         setMessages={setMessages}
-                        sendFile={sendFile}
-                        isSendingFile={isSendingFile}
                         isFetchingMessages={isFetchingMessages}
+                        selectedUser={selectedUser}
                     />
                     {scrollButton && <IconButton
                         onClick={scrollMCB}

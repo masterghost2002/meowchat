@@ -17,7 +17,7 @@ const HeaderLabel = ({ headerRef, userInfo, isMobile, setSelectedUser, lastSeen 
                     aria-label='back'
                     bg='transparent'
                     icon={<IoIosArrowBack size={30}
-                        onClick={() => setSelectedUser(null)} />}
+                    onClick={() => setSelectedUser(null)} />}
                 />
                 <Avatar size='md' src={userInfo.avatar} mx={5} />
                 <VStack spacing={0} padding={0} align='stretch'>
@@ -56,7 +56,7 @@ export default function ChatArea(
         setScrollButton,
         loggedUserId,
         sendFile,
-        isSendingFile,
+        selectedUser,
         isFetchingMessages
         
     }) {
@@ -142,7 +142,7 @@ export default function ChatArea(
                 onScroll={handleScrollToSetScrollButton}
             >
                 <HeaderLabel headerRef={headerRef} userInfo={user} isMobile={isMobile} setSelectedUser={setSelectedUser} lastSeen={lastSeen} />
-                {!isFetchingMessages &&
+                {!isFetchingMessages&&
                     <Container
                         display={'flex'}
                         flexDirection={'column'}
@@ -155,7 +155,7 @@ export default function ChatArea(
                             messages.map((message, index) => {
                                 const dateToDisplay = handleDateInfo(message.createdAt);
                                 return (
-                                    <Box
+                                    (message.sender === loggedUserId || message.sender === selectedUser) && <Box
                                         key={index}
                                         alignSelf={message.sender === loggedUserId ? 'flex-end' : 'flex-start'}
                                         backgroundColor={message.sender === loggedUserId ? 'blue.400' : 'white'}
