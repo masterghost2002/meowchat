@@ -31,10 +31,10 @@ const HeaderLabel = ({ headerRef, userInfo, isMobile, setSelectedUser, lastSeen 
 const FileContainer = ({ file, isMe }) => {
     return (
         <Link href={file.url} isExternal={true} display={'flex'} mb={2} style={{ textDecoration: 'none' }} flexDirection={'column'} width={'100%'} >
-            {isImage(file.format) && <Image src={file.url} height={'300px'} width={'100%'} objectFit='cover' />}
+            {isImage(file.format) && <Image src={file.url} height={['200px','300px']} width={'100%'} objectFit='cover' />}
             <Box display={'flex'} alignItems={'center'}  bg={isMe?'blue.500':'blackAlpha.100'} p={2} borderRadius={6}>
                 {!isImage(file.format) && <AiOutlineFilePdf size={20} />}
-                <Box ml={2}>
+                <Box width={'100%'}>
                     <Text >{file.name}</Text>
                     <Text fontSize={'10px'}>{file.size && file.size}</Text>
                 </Box>
