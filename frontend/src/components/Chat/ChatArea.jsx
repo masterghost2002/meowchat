@@ -35,38 +35,13 @@ const FileContainer = ({ file, isMe }) => {
             <Box bg={isMe?'blue.500':'blackAlpha.100'} p={2} borderRadius={6} width={'100%'} display={'flex'} alignItems={'center'}>
                 {!isImage(file.format) && <AiOutlineFilePdf size={20} />}
                 <Box ml={2}>
-                    <Text>{file.name}</Text>
-                    <Text fontSize={'10px'}>{file.size && file.size}</Text>
+                    <Text wordBreak={'break-all'}>{file.name}</Text>
+                    <Text wordBreak={'break-all'} fontSize={'10px'}>{file.size && file.size}</Text>
                 </Box>
             </Box>
         </Link>
     )
 };
-const MessageBox = ({isMe}) => {
-    return (
-        <Box
-            key={index}
-            alignSelf={message.sender === loggedUserId ? 'flex-end' : 'flex-start'}
-            backgroundColor={message.sender === loggedUserId ? 'blue.400' : 'white'}
-            margin={2}
-            padding={3}
-            flexWrap={'wrap'}
-            maxWidth={'80%'}
-            height={'auto'}
-            display={'flex'}
-            flexDirection={'column'}
-            color={message.sender === loggedUserId ? 'white' : 'blue.400'}
-            borderRadius={message.file ? 10 : 22}
-            justifyContent={'space-between'}
-            fontFamily={`'Poppins', sans-serif`}
-            fontWeight={500}
-        >
-            {message.file && <FileContainer file={message.file} isMe={message.sender === loggedUserId} />}
-            <Text  wordBreak={'break-all'} fontFamily={`'Poppins', sans-serif`} alignSelf={'center'} fontSize={isMobile ? '18px' : '22px'}>{message.text}</Text>
-            <Text  wordBreak={'break-all'} marginLeft={2} fontWeight={600} fontSize={isMobile ? '10px' : '16px'} alignSelf={'flex-end'}>{dateToDisplay}</Text>
-        </Box>
-    )
-}
 export default function ChatArea(
     {
         scrollMCB,
