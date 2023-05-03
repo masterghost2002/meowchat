@@ -10,8 +10,8 @@ import { BsChevronDoubleDown } from 'react-icons/bs';
 import { userRequest } from '../../apiRequestMethods';
 import Menu from '../Menu';
 import { delete_cookie } from 'sfcookies';
-// const wssurl = 'wss://meowchat-backend-production.up.railway.app';
-const wssurl = 'ws://localhost:5000';
+const wssurl = 'wss://meowchat-backend-production.up.railway.app';
+// const wssurl = 'ws://localhost:5000';
 const allowedExtension = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'application/pdf'];
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes'
