@@ -50,6 +50,13 @@ const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, o
             setUsernameAvailable(false);
         }
     };
+    const debounceCheck = (func, timeout = 300)=>{
+        let timer;
+        return (...args)=>{
+            clearTimeout(timer);
+            timer = setTimeout(()=>{func.apply(this, args)}, timeout);
+        };
+    }
     const handleOnChangeUsername = (e) => {
         handleFormData(e);
         if (e.target.value?.trim().length > 3) {
@@ -58,6 +65,7 @@ const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, o
         }
         else setShowAvailablity(false);
     };
+    const betterSearch = debounceCheck((e)=>handleOnChangeUsername(e));
     return (
         <>
             <SimpleInput
@@ -76,7 +84,7 @@ const SignUpForm = ({ handleFormData, setUsernameAvailable, usernameAvailable, o
                 name='username'
                 placeholder='username'
                 size='lg'
-                onChange={handleOnChangeUsername}
+                onChange={betterSearch}
             />
             {showAvailablity && <Text my={2} color={usernameAvailable ? 'green.400' : 'red.400'}>{usernameAvailable ? 'Username is available' : 'Username is not available'}</Text>}
             <SimpleInput
@@ -132,6 +140,7 @@ export default function AuthForm({ handleRequest, handleFormData, error, isFetch
         e.preventDefault();
         if(!showOtp && !isLogin)
             sendOtp();
+            
         else handleRequest(isLogin);
     }
     return (

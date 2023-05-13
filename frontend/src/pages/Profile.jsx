@@ -105,7 +105,7 @@ const UpdateAvatarContainer = ({ avatar, setNewAvatar }) => {
   )
 }
 export default function Profile() {
-  const { avatar, fullname, username, email,setUserName, setId, setAvatar, setFullName, setEmail } = useContext(UserContext);
+  const { avatar, fullname, username, email, setUserName, setId, setAvatar, setFullName, setEmail } = useContext(UserContext);
   const [usernameAvailable, setUsernameAvailable] = useState(false);
   const [newUsername, setNewUsername] = useState(null);
   const [newPassword, setNewPassword] = useState(null);
@@ -127,16 +127,23 @@ export default function Profile() {
     if (newUsername?.trim().length > 3)
       checkUserName(e.target.value);
   };
-
+  const debounceCheck = (func, timeout = 300) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { func.apply(this, args) }, timeout);
+    };
+  }
+  const betterSearch = debounceCheck((e) => handleOnChangeUsername(e));
   // update user
   const handleOnSubmit = async (e) => {
     // The preventDefault method prevents the browser from issuing the default action which in the case of a form submission is to refresh the page.
     e.preventDefault();
     let newDetails = new FormData();
-    if(newUsername) newDetails.append('username', newUsername);
-    if(newPassword) newDetails.append('password', newPassword);
-    if(newFullname) newDetails.append('fullname', newFullname);
-    if(newAvatar) newDetails.append('avatar', newAvatar);
+    if (newUsername) newDetails.append('username', newUsername);
+    if (newPassword) newDetails.append('password', newPassword);
+    if (newFullname) newDetails.append('fullname', newFullname);
+    if (newAvatar) newDetails.append('avatar', newAvatar);
     setSpinner(true);
     try {
       const res = await userRequest.post('/auth/update/user', newDetails);
@@ -157,7 +164,7 @@ export default function Profile() {
         title: err.response.data.errorInfo.errorType,
         message: err.response.data.errorInfo.errorMessage,
         status: 'error'
-    });
+      });
     }
   }
   return (
@@ -185,16 +192,16 @@ export default function Profile() {
         </GridItem>
         <GridItem p={[5, 20]} width={'100%'} display={'flex'} flexDirection={'column'} colSpan={['1', '4']} maxH={['100%', '100dvh']} overflow={'auto'}>
           <NavBar />
-          <UpdateAvatarContainer avatar={avatar} setNewAvatar={setNewAvatar}/>
-          <EmailContainer email={email} setEmail = {setEmail} />
+          <UpdateAvatarContainer avatar={avatar} setNewAvatar={setNewAvatar} />
+          <EmailContainer email={email} setEmail={setEmail} />
           <FormContainer handleSubmit={handleOnSubmit}>
             <SimpleInput size='lg' label={'Full Name'} placeholder={fullname} onChange={e => setNewFullname(e.target.value)} />
-            <SimpleInput size='lg' label={'Username'} placeholder={username} onChange={handleOnChangeUsername} />
+            <SimpleInput size='lg' label={'Username'} placeholder={username} onChange={betterSearch} />
             {newUsername?.trim().length > 3 && <Text my={2} color={usernameAvailable ? 'green.400' : 'red.400'}>{usernameAvailable ? 'Username is available' : 'Username is not available'}</Text>}
             <PasswordInput onChange={e => setNewPassword(e.target.value)} />
             <Button width={'30%'} isDisabled={spinner} colorScheme='blue' alignSelf={'flex-end'} type='submit'>
               {
-                spinner?<Spinner/>:'Update'
+                spinner ? <Spinner /> : 'Update'
               }
             </Button>
           </FormContainer>

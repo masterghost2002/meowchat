@@ -16,7 +16,6 @@ export default function ResetPassword() {
                 message: 'Check your mail inbox',
                 status: 'success'
             });
-            console.log("hi");
             setSpinner(false);
         } catch (err) {
             addToast({
